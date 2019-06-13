@@ -41,6 +41,10 @@ def run_training(sub_id: int, run_seed: int, run_options, process_queue):
     train_model = run_options['--train']
     save_freq = int(run_options['--save-freq'])
     keep_checkpoints = int(run_options['--keep-checkpoints'])
+    if run_options['--keep_checkpoint_every_n_hours'] is not None:
+        keep_checkpoint_every_n_hours = int(run_options['--keep_checkpoint_every_n_hours'])
+    else:
+        keep_checkpoint_every_n_hours = 4
     base_port = int(run_options['--base-port'])
     num_envs = int(run_options['--num-envs'])
     curriculum_folder = (run_options['--curriculum']
@@ -85,7 +89,7 @@ def run_training(sub_id: int, run_seed: int, run_options, process_queue):
     tc = TrainerController(model_path, summaries_dir, run_id + '-' + str(sub_id),
                            save_freq, maybe_meta_curriculum,
                            load_model, train_model,
-                           keep_checkpoints, lesson, env.external_brains,
+                           keep_checkpoints, keep_checkpoint_every_n_hours, lesson, env.external_brains,
                            run_seed, fast_simulation)
 
     # Signal that environment has been launched.
@@ -221,22 +225,23 @@ def main():
       mlagents-learn --help
 
     Options:
-      --env=<file>               Name of the Unity executable [default: None].
-      --curriculum=<directory>   Curriculum json directory for environment [default: None].
-      --keep-checkpoints=<n>     How many model checkpoints to keep [default: 5].
-      --lesson=<n>               Start learning from this lesson [default: 0].
-      --load                     Whether to load the model or randomly initialize [default: False].
-      --run-id=<path>            The directory name for model and summary statistics [default: ppo].
-      --num-runs=<n>             Number of concurrent training sessions [default: 1].
-      --save-freq=<n>            Frequency at which to save model [default: 50000].
-      --seed=<n>                 Random seed used for training [default: -1].
-      --slow                     Whether to run the game at training speed [default: False].
-      --train                    Whether to train model, or only run inference [default: False].
-      --base-port=<n>            Base port for environment communication [default: 5005].
-      --num-envs=<n>             Number of parallel environments to use for training [default: 1]
-      --docker-target-name=<dt>  Docker volume to store training-specific files [default: None].
-      --no-graphics              Whether to run the environment in no-graphics mode [default: False].
-      --debug                    Whether to run ML-Agents in debug mode with detailed logging [default: False].
+      --env=<file>                          Name of the Unity executable [default: None].
+      --curriculum=<directory>              Curriculum json directory for environment [default: None].
+      --keep-checkpoints=<n>                How many model checkpoints to keep [default: 5].
+      --keep_checkpoint_every_n_hours=<n>   How many often to keep model checkpoints [default: 4]
+      --lesson=<n>                          Start learning from this lesson [default: 0].
+      --load                                Whether to load the model or randomly initialize [default: False].
+      --run-id=<path>                       The directory name for model and summary statistics [default: ppo].
+      --num-runs=<n>                        Number of concurrent training sessions [default: 1].
+      --save-freq=<n>                       Frequency at which to save model [default: 50000].
+      --seed=<n>                            Random seed used for training [default: -1].
+      --slow                                Whether to run the game at training speed [default: False].
+      --train                               Whether to train model, or only run inference [default: False].
+      --base-port=<n>                       Base port for environment communication [default: 5005].
+      --num-envs=<n>                        Number of parallel environments to use for training [default: 1]
+      --docker-target-name=<dt>             Docker volume to store training-specific files [default: None].
+      --no-graphics                         Whether to run the environment in no-graphics mode [default: False].
+      --debug                               Whether to run ML-Agents in debug mode with detailed logging [default: False].
     '''
 
     options = docopt(_USAGE)
@@ -248,6 +253,7 @@ def main():
         env_logger.setLevel('DEBUG')
     num_runs = int(options['--num-runs'])
     seed = int(options['--seed'])
+
 
     if options['--env'] == 'None' and num_runs > 1:
         raise TrainerError('It is not possible to launch more than one concurrent training session '

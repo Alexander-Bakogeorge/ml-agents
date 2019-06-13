@@ -32,6 +32,7 @@ class TrainerController(object):
                  load: bool,
                  train: bool,
                  keep_checkpoints: int,
+                 keep_checkpoint_every_n_hours: int,
                  lesson: Optional[int],
                  external_brains: Dict[str, BrainParameters],
                  training_seed: int,
@@ -61,6 +62,7 @@ class TrainerController(object):
         self.load_model = load
         self.train_model = train
         self.keep_checkpoints = keep_checkpoints
+        self.keep_checkpoint_every_n_hours = keep_checkpoint_every_n_hours
         self.trainers: Dict[str, Trainer] = {}
         self.trainer_metrics: Dict[str, TrainerMetrics] = {}
         self.global_step = 0
@@ -134,6 +136,7 @@ class TrainerController(object):
                 basedir=self.model_path,
                 name=brain_name)
             trainer_parameters['keep_checkpoints'] = self.keep_checkpoints
+            trainer_parameters['keep_checkpoint_every_n_hours'] = self.keep_checkpoint_every_n_hours
             if brain_name in trainer_config:
                 _brain_key = brain_name
                 while not isinstance(trainer_config[_brain_key], dict):
